@@ -78,6 +78,13 @@
             color: #add8e6;
             text-decoration: none;
         }
+        /* Ensure ads have proper width */
+        .ad-container {
+            width: 100%;
+            max-width: 600px; /* Set a max width for ad containers */
+            margin: 20px auto; /* Center the ads */
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -95,11 +102,20 @@
         <div id="output" class="output">Your transcribed text will appear here...</div>
         <button id="copy-btn" onclick="copyToClipboard()">📋 Copy Text</button>
     </div>
+
+    <!-- Ads Section -->
+    <div class="ad-container" id="ad1"></div>
+    <div class="ad-container" id="ad2"></div>
+    <div class="ad-container" id="ad3"></div>
+
     <div class="about">
         <p>Made by Adarsha Bashyal</p>
         <p>Contact: 9763 660 492</p>
         <p>Email: <a href="mailto:aadarshabashyal1@gmail.com">aadarshabashyal1@gmail.com</a></p>
     </div>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2038280505979686"
+     crossorigin="anonymous"></script>
 
     <script>
         let recognition;
@@ -164,6 +180,50 @@
         setInterval(() => {
             alert("Made by Adarsha Bashyal\nContact: 9763 660 492\nEmail: aadarshabashyal1@gmail.com");
         }, 300000); // 5 minutes = 300,000 milliseconds
+
+        // Load Ads into the HTML
+        function loadAds() {
+            // Ad 1
+            var ad1 = document.getElementById('ad1');
+            ad1.innerHTML = `
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-2038280505979686"
+                     data-ad-slot="5698008259"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            `;
+            (adsbygoogle = window.adsbygoogle || []).push({});
+
+            // Ad 2
+            var ad2 = document.getElementById('ad2');
+            ad2.innerHTML = `
+                <ins class="adsbygoogle"
+                     style="display:block; text-align:center;"
+                     data-ad-layout="in-article"
+                     data-ad-format="fluid"
+                     data-ad-client="ca-pub-2038280505979686"
+                     data-ad-slot="9700004467"></ins>
+            `;
+            (adsbygoogle = window.adsbygoogle || []).push({});
+
+            // Ad 3
+            var ad3 = document.getElementById('ad3');
+            ad3.innerHTML = `
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-format="autorelaxed"
+                     data-ad-client="ca-pub-2038280505979686"
+                     data-ad-slot="6615240777"></ins>
+            `;
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        }
+
+        // Load ads when the page loads
+        loadAds();
+
+        // Show ads every minute (60,000 milliseconds)
+        setInterval(loadAds, 60000);
     </script>
 </body>
 </html>
