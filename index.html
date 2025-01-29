@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to Text</title>
+    <link rel="stylesheet" href="styles.css">
+<script defer data-domain="voiceintotext.tiiny.site" src="https://analytics.tiiny.site/js/plausible.js"></script></head>
+<body>
+    <div class="container">
+        <h1>Voice to Text</h1>
+        <p>Select Language:</p>
+        <select id="language-selector">
+            <option value="en-US">English (US)</option>
+            <option value="ne-NP">Nepali</option>
+            <option value="hi-IN">Hindi</option>
+            <option value="es-ES">Spanish</option>
+            <option value="fr-FR">French</option>
+        </select>
+        <button id="start-btn" onclick="startVoiceRecognition()">🎤 Start Speaking</button>
+        <div id="output" class="output">Your transcribed text will appear here...</div>
+        <button id="copy-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+    </div>
+    <div class="about">
+        <p>Made by Adarsha Bashyal</p>
+        <p>Contact: 9763660492</p>
+        <p>Email: <a href="mailto:aadarshabashyal1@gmail.com">aadarshabashyal1@gmail.com</a></p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
