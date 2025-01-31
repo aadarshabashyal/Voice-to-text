@@ -1,229 +1,377 @@
 <!DOCTYPE html>
-<html lang="ne">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice to Text</title>
     <style>
-        * {
+         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         body {
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            font-family: 'Arial', sans-serif;
             color: white;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            text-align: center;
-            overflow: hidden;
+            padding: 20px;
         }
+
         .container {
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
             padding: 30px;
-            width: 90%;
+            width: 100%;
             max-width: 600px;
-            box-shadow: 0px 5px 30px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
         }
+
         h1 {
-            font-size: 2rem;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #4caf50, #2196f3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             margin-bottom: 20px;
         }
+
         select {
             width: 100%;
             padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
             font-size: 1rem;
-            margin: 15px 0;
-            border-radius: 10px;
-            border: none;
+            appearance: none;
         }
-        .output {
-            background: white;
-            color: black;
-            padding: 20px;
-            margin-top: 20px;
+
+        button {
+            padding: 15px;
+            border: none;
             border-radius: 10px;
-            font-size: 1.2rem;
-            height: 150px;
+            background: linear-gradient(135deg, #4caf50, #2196f3);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .output-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .output {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 150px;
+            max-height: 300px;
             overflow-y: auto;
-            word-wrap: break-word;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            border: 2px solid #4caf50;
             text-align: left;
         }
-        button {
-            padding: 15px 30px;
-            font-size: 1rem;
-            margin-top: 20px;
-            background: linear-gradient(135deg, #4caf50, #8bc34a);
+
+        .status-indicator {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #4caf50;
             color: white;
-            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .history-panel {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .history-panel h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 10px 0;
             border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s ease-in-out;
+            transition: background 0.3s;
         }
-        button:hover {
-            background: linear-gradient(135deg, #8bc34a, #4caf50);
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
-        .about {
-            margin-top: 30px;
-            font-size: 0.9rem;
-            text-align: center;
-            color: white;
-        }
-        .about a {
-            color: #add8e6;
-            text-decoration: none;
-        }
-        /* Ensure ads have proper width */
-        .ad-container {
-            width: 100%;
-            max-width: 600px; /* Set a max width for ad containers */
-            margin: 20px auto; /* Center the ads */
-            text-align: center;
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4caf50, #2196f3);
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Voice to Text</h1>
-        <p>Select Language:</p>
-        <select id="language-selector">
-            <option value="en-US">English (US)</option>
-            <option value="ne-NP">Nepali</option>
-            <option value="hi-IN">Hindi</option>
-            <option value="es-ES">Spanish</option>
-            <option value="fr-FR">French</option>
-        </select>
-        <button id="start-btn" onclick="startVoiceRecognition()">🎤 Start Speaking</button>
-        <div id="output" class="output">Your transcribed text will appear here...</div>
-        <button id="copy-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+        <h1>🎙️ Voice to Text</h1>
+        
+        <div class="controls">
+            <select id="language-selector">
+                <option value="en-US">English</option>
+                <option value="es-ES">Spanish</option>
+                <option value="fr-FR">French</option>
+                <option value="ne-NP">Nepali</option>
+                <option value="hi-IN">Hindi</option>
+            </select>
+            <button id="start-btn">🎤 Start</button>
+        </div>
+
+        <div class="output-container">
+            <div class="status-indicator" id="status">Listening</div>
+            <div class="output" id="output">Click Start to begin...</div>
+        </div>
+
+        <div class="controls">
+            <button id="copy-btn">📋 Copy</button>
+            <div class="ad-container">
+       
+            <a href="mailto:aadarshabashyal1@gmail.com"><img src="https://i.ibb.co/RT1gdC4f/20250131-150524.jpg" alt="20250131-132917" border="0"></a>
+        </a>
     </div>
-
-    <!-- Ads Section -->
-    <div class="ad-container" id="ad1"></div>
-    <div class="ad-container" id="ad2"></div>
-    <div class="ad-container" id="ad3"></div>
-
-    <div class="about">
-        <p>Made by Adarsha Bashyal</p>
-        <p>Contact: 9763 660 492</p>
-        <p>Email: <a href="mailto:aadarshabashyal1@gmail.com">aadarshabashyal1@gmail.com</a></p>
+            <button id="download-btn">📥 Download</button>
+            <button id="clear-btn">❌ Clear</button>
+        </div>
+        
+        <div id="popup" style="display:none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div style="position: relative; text-align: center;">
+        <span onclick="closePopup()" style="position: absolute; top: 10px; right: 10px; color: white; font-size: 30px; cursor: pointer;">&times;</span>
+        
+        <!-- Clickable Image that redirects to a URL -->
+        <a href="mailto:aadarshabashyal1@gmail.com" target="_blank">
+            <img src="https://i.ibb.co/RT1gdC4f/20250131-150524.jpg" alt="Popup Image" style="width: 80%; height: auto;">
+        </a>
     </div>
+</div>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2038280505979686"
-     crossorigin="anonymous"></script>
+<script>
+    function showPopup() {
+        document.getElementById('popup').style.display = 'flex';
+    }
+
+    function closePopup() {
+        document.getElementById('popup').style.display = 'none';
+    }
+
+    // Show the pop-up every 1 minute
+    setInterval(showPopup, 60000);
+</script>
+
+        <div class="history-panel">
+            <h3>📜 History</h3>
+            <div id="history-list"></div>
+            <button id="clear-history-btn" style="margin-top: 10px;">🗑️ Clear History</button>
+        </div>
+    </div>
+    
+
+    
 
     <script>
-        let recognition;
-        let selectedLanguage = "en-US"; // Default language
+        let recognition = null;
+        let isListening = false;
+        let finalTranscript = '';
+        let currentLanguage = 'en-US';
+        let lastTranscript = ''; // Variable to track last transcript
 
-        // Initialize Speech Recognition
-        function initSpeechRecognition() {
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = selectedLanguage;
+        // Initialize speech recognition
+        function initRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Speech recognition not supported in this browser.');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = currentLanguage;
 
             recognition.onstart = () => {
-                document.getElementById("output").textContent = "Listening...";
-                document.getElementById("output").style.background = "rgba(240, 240, 240, 0.8)";
+                isListening = true;
+                document.getElementById('status').style.display = 'block';
+                document.getElementById('start-btn').textContent = '⏹️ Stop';
             };
 
             recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById("output").textContent = transcript;
-                saveToLocal(transcript); // Save transcript locally
+                let interim = '';
+                let newFinalTranscript = ''; // Reset final transcript each time
+
+                // Loop through all the results and get the final and interim results
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+
+                    // If the transcript is final and new (not a repeat), add to finalTranscript
+                    if (event.results[i].isFinal && transcript !== lastTranscript) {
+                        newFinalTranscript = transcript; // Replace with new transcript
+                        lastTranscript = transcript; // Store last transcript to prevent repeats
+                    } else if (!event.results[i].isFinal) {
+                        interim += transcript; // Handle interim text
+                    }
+                }
+
+                // Update the output with final + interim results
+                document.getElementById('output').textContent = newFinalTranscript + interim;
+
+                // Keep the final transcript updated
+                finalTranscript = newFinalTranscript;
             };
 
-            recognition.onerror = () => {
-                document.getElementById("output").textContent = "Error occurred. Please try again.";
+            recognition.onerror = (event) => {
+                console.error('Error:', event.error);
+                stopRecognition();
+            };
+
+            recognition.onend = () => {
+                if (finalTranscript.trim()) {
+                    saveToHistory(finalTranscript.trim());
+                    finalTranscript = '';
+                }
+                stopRecognition();
             };
         }
 
-        // Update language when the user selects a new language
-        document.getElementById("language-selector").addEventListener("change", (e) => {
-            selectedLanguage = e.target.value;
-            initSpeechRecognition();
+        function toggleRecognition() {
+            if (!isListening) {
+                initRecognition();
+                recognition.start();
+            } else {
+                recognition.stop();
+            }
+        }
+
+        function stopRecognition() {
+            isListening = false;
+            document.getElementById('status').style.display = 'none';
+            document.getElementById('start-btn').textContent = '🎤 Start';
+        }
+
+        function saveToHistory(text) {
+            try {
+                const history = JSON.parse(localStorage.getItem('voiceHistory') || '[]');
+                history.unshift({
+                    text: text,
+                    date: new Date().toLocaleString()
+                });
+                localStorage.setItem('voiceHistory', JSON.stringify(history.slice(0, 15)));
+                updateHistory();
+            } catch (e) {
+                console.error('LocalStorage error:', e);
+            }
+        }
+
+        function updateHistory() {
+            try {
+                const history = JSON.parse(localStorage.getItem('voiceHistory') || '[]');
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = history.map((item, index) => `
+                    <div class="history-item" onclick="loadHistory(${index})">
+                        <div>${item.text?.substring(0, 40) || ''}${item.text?.length > 40 ? '...' : ''}</div>
+                        <small>${item.date}</small>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('History update error:', e);
+            }
+        }
+
+        function loadHistory(index) {
+            const history = JSON.parse(localStorage.getItem('voiceHistory') || '[]');
+            if (history[index]) {
+                document.getElementById('output').textContent = history[index].text;
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+        }
+
+        // Event Listeners
+        document.getElementById('start-btn').addEventListener('click', toggleRecognition);
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('output').textContent);
+        });
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const text = document.getElementById('output').textContent;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcript-${Date.now()}.txt`;
+            a.click();
+        });
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            document.getElementById('output').textContent = '';
+        });
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            localStorage.removeItem('voiceHistory');
+            updateHistory();
+        });
+        document.getElementById('language-selector').addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            if (recognition) {
+                recognition.lang = currentLanguage;
+            }
         });
 
-        // Start Voice Recognition
-        function startVoiceRecognition() {
-            if (!recognition) {
-                initSpeechRecognition();
-            }
-            recognition.lang = selectedLanguage;
-            recognition.start();
-        }
-
-        // Copy text to clipboard
-        function copyToClipboard() {
-            const text = document.getElementById("output").textContent;
-            if (text && text !== "Listening...") {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert("Text copied to clipboard!");
-                });
-            } else {
-                alert("No text to copy!");
-            }
-        }
-
-        // Save transcribed text locally
-        function saveToLocal(text) {
-            let transcripts = JSON.parse(localStorage.getItem("transcripts")) || [];
-            transcripts.push(text);
-            localStorage.setItem("transcripts", JSON.stringify(transcripts));
-        }
-
-        // Display "About" alert every 5 minutes
-        setInterval(() => {
-            alert("Made by Adarsha Bashyal\nContact: 9763 660 492\nEmail: aadarshabashyal1@gmail.com");
-        }, 300000); // 5 minutes = 300,000 milliseconds
-
-        // Load Ads into the HTML
-        function loadAds() {
-            // Ad 1
-            var ad1 = document.getElementById('ad1');
-            ad1.innerHTML = `
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-2038280505979686"
-                     data-ad-slot="5698008259"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-            `;
-            (adsbygoogle = window.adsbygoogle || []).push({});
-
-            // Ad 2
-            var ad2 = document.getElementById('ad2');
-            ad2.innerHTML = `
-                <ins class="adsbygoogle"
-                     style="display:block; text-align:center;"
-                     data-ad-layout="in-article"
-                     data-ad-format="fluid"
-                     data-ad-client="ca-pub-2038280505979686"
-                     data-ad-slot="9700004467"></ins>
-            `;
-            (adsbygoogle = window.adsbygoogle || []).push({});
-
-            // Ad 3
-            var ad3 = document.getElementById('ad3');
-            ad3.innerHTML = `
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-format="autorelaxed"
-                     data-ad-client="ca-pub-2038280505979686"
-                     data-ad-slot="6615240777"></ins>
-            `;
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        }
-
-        // Load ads when the page loads
-        loadAds();
-
-        // Show ads every minute (60,000 milliseconds)
-        setInterval(loadAds, 60000);
+        // Initial setup
+        updateHistory();
     </script>
 </body>
 </html>
