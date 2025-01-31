@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice to Text</title>
     <style>
-         * {
+       * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -157,11 +157,21 @@
             font-size: 1.2rem;
         }
     </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2538665028567398"
+     crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="container">
         <h1>🎙️ Voice to Text</h1>
-        
+
+        <!-- Google Sign-in Button -->
+        <button id="google-sign-in-btn">Sign In with Google</button>
+        <div id="user-info" style="display: none;">
+            <p id="user-name">Hello, </p>
+            <button id="google-sign-out-btn">Log Out</button>
+        </div>
+
+        <!-- Language selector and buttons -->
         <div class="controls">
             <select id="language-selector">
                 <option value="en-US">English</option>
@@ -173,64 +183,89 @@
             <button id="start-btn">🎤 Start</button>
         </div>
 
+        <!-- Output display -->
         <div class="output-container">
             <div class="status-indicator" id="status">Listening</div>
             <div class="output" id="output">Click Start to begin...</div>
         </div>
 
+        <!-- Controls for saving, clearing, and downloading -->
         <div class="controls">
+            <button id="save-btn">💾 Save to history</button>
             <button id="copy-btn">📋 Copy</button>
-            <div class="ad-container">
-       
-            <a href="mailto:aadarshabashyal1@gmail.com"><img src="https://i.ibb.co/RT1gdC4f/20250131-150524.jpg" alt="20250131-132917" border="0"></a>
-        </a>
-    </div>
             <button id="download-btn">📥 Download</button>
             <button id="clear-btn">❌ Clear</button>
         </div>
-        
-        <div id="popup" style="display:none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 9999;">
-    <div style="position: relative; text-align: center;">
-        <span onclick="closePopup()" style="position: absolute; top: 10px; right: 10px; color: white; font-size: 30px; cursor: pointer;">&times;</span>
-        
-        <!-- Clickable Image that redirects to a URL -->
-        <a href="mailto:aadarshabashyal1@gmail.com" target="_blank">
-            <img src="https://i.ibb.co/RT1gdC4f/20250131-150524.jpg" alt="Popup Image" style="width: 80%; height: auto;">
-        </a>
-    </div>
-</div>
 
-<script>
-    function showPopup() {
-        document.getElementById('popup').style.display = 'flex';
-    }
-
-    function closePopup() {
-        document.getElementById('popup').style.display = 'none';
-    }
-
-    // Show the pop-up every 1 minute
-    setInterval(showPopup, 60000);
-</script>
-
+        <!-- History Panel -->
         <div class="history-panel">
             <h3>📜 History</h3>
-            <div id="history-list"></div>
-            <button id="clear-history-btn" style="margin-top: 10px;">🗑️ Clear History</button>
+            <div id="history-list" class="history-list"></div>
+            <button id="clear-history-btn">🗑️ Clear History</button>
         </div>
     </div>
-    
 
-    
+    <script type="module">
+        // Firebase setup
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1sCYnziYh22iXWIH_15xuRh7gzu0eDBs",
+            authDomain: "voicetotext-eb9d8.firebaseapp.com",
+            projectId: "voicetotext-eb9d8",
+            storageBucket: "voicetotext-eb9d8.firebasestorage.app",
+            messagingSenderId: "570361659879",
+            appId: "1:570361659879:web:f55e51c85f063d6027fd42",
+            measurementId: "G-KP56HLVNHL"
+        };
 
-    <script>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Google Sign-In Logic
+        const googleSignInBtn = document.getElementById("google-sign-in-btn");
+        const googleSignOutBtn = document.getElementById("google-sign-out-btn");
+        const userInfo = document.getElementById("user-info");
+        const userName = document.getElementById("user-name");
+
+        googleSignInBtn.addEventListener("click", () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    userName.textContent = `Hello, ${user.displayName}`; // Only display the name, not email
+                    userInfo.style.display = "block";
+                    googleSignInBtn.style.display = "none";
+                })
+                .catch((error) => console.error(error));
+        });
+
+        googleSignOutBtn.addEventListener("click", () => {
+            signOut(auth)
+                .then(() => {
+                    googleSignInBtn.style.display = "block";
+                    userInfo.style.display = "none";
+                })
+                .catch((error) => console.error(error));
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userName.textContent = `Hello, ${user.displayName}`;
+                userInfo.style.display = "block";
+                googleSignInBtn.style.display = "none";
+            } else {
+                googleSignInBtn.style.display = "block";
+                userInfo.style.display = "none";
+            }
+        });
+
+        // Speech Recognition Setup
         let recognition = null;
         let isListening = false;
         let finalTranscript = '';
         let currentLanguage = 'en-US';
-        let lastTranscript = ''; // Variable to track last transcript
 
-        // Initialize speech recognition
         function initRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
@@ -253,23 +288,18 @@
                 let interim = '';
                 let newFinalTranscript = ''; // Reset final transcript each time
 
-                // Loop through all the results and get the final and interim results
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
 
-                    // If the transcript is final and new (not a repeat), add to finalTranscript
-                    if (event.results[i].isFinal && transcript !== lastTranscript) {
-                        newFinalTranscript = transcript; // Replace with new transcript
-                        lastTranscript = transcript; // Store last transcript to prevent repeats
+                    if (event.results[i].isFinal && transcript !== finalTranscript) {
+                        newFinalTranscript = transcript;
+                        finalTranscript = transcript;
                     } else if (!event.results[i].isFinal) {
-                        interim += transcript; // Handle interim text
+                        interim += transcript;
                     }
                 }
 
-                // Update the output with final + interim results
                 document.getElementById('output').textContent = newFinalTranscript + interim;
-
-                // Keep the final transcript updated
                 finalTranscript = newFinalTranscript;
             };
 
@@ -279,10 +309,6 @@
             };
 
             recognition.onend = () => {
-                if (finalTranscript.trim()) {
-                    saveToHistory(finalTranscript.trim());
-                    finalTranscript = '';
-                }
                 stopRecognition();
             };
         }
@@ -302,67 +328,7 @@
             document.getElementById('start-btn').textContent = '🎤 Start';
         }
 
-        function saveToHistory(text) {
-            try {
-                const history = JSON.parse(localStorage.getItem('voiceHistory') || '[]');
-                history.unshift({
-                    text: text,
-                    date: new Date().toLocaleString()
-                });
-                localStorage.setItem('voiceHistory', JSON.stringify(history.slice(0, 15)));
-                updateHistory();
-            } catch (e) {
-                console.error('LocalStorage error:', e);
-            }
-        }
-
-        function updateHistory() {
-            try {
-                const history = JSON.parse(localStorage.getItem('voiceHistory') || '[]');
-                const historyList = document.getElementById('history-list');
-                historyList.innerHTML = history.map((item, index) => `
-                    <div class="history-item" onclick="loadHistory(${index})">
-                        <div>${item.text?.substring(0, 40) || ''}${item.text?.length > 40 ? '...' : ''}</div>
-                        <small>${item.date}</small>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error('History update error:', e);
-            }
-        }
-
-        function loadHistory(index) {
-            const history = JSON.parse(localStorage.getItem('voiceHistory') || '[]');
-            if (history[index]) {
-                document.getElementById('output').textContent = history[index].text;
-            }
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('light-theme');
-        }
-
-        // Event Listeners
         document.getElementById('start-btn').addEventListener('click', toggleRecognition);
-        document.getElementById('copy-btn').addEventListener('click', () => {
-            navigator.clipboard.writeText(document.getElementById('output').textContent);
-        });
-        document.getElementById('download-btn').addEventListener('click', () => {
-            const text = document.getElementById('output').textContent;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `transcript-${Date.now()}.txt`;
-            a.click();
-        });
-        document.getElementById('clear-btn').addEventListener('click', () => {
-            document.getElementById('output').textContent = '';
-        });
-        document.getElementById('clear-history-btn').addEventListener('click', () => {
-            localStorage.removeItem('voiceHistory');
-            updateHistory();
-        });
         document.getElementById('language-selector').addEventListener('change', (e) => {
             currentLanguage = e.target.value;
             if (recognition) {
@@ -370,8 +336,60 @@
             }
         });
 
-        // Initial setup
-        updateHistory();
+        // Save story to local storage and display in history
+        document.getElementById('save-btn').addEventListener('click', () => {
+            const currentStory = document.getElementById('output').textContent;
+            if (currentStory) {
+                let history = JSON.parse(localStorage.getItem('history')) || [];
+                history.push(currentStory);
+                localStorage.setItem('history', JSON.stringify(history));
+                updateHistoryList();
+            }
+        });
+
+        // Display saved history
+        function updateHistoryList() {
+            const historyList = JSON.parse(localStorage.getItem('history')) || [];
+            const historyContainer = document.getElementById('history-list');
+            historyContainer.innerHTML = '';
+            historyList.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.classList.add('history-item');
+                historyItem.textContent = item;
+                historyContainer.appendChild(historyItem);
+            });
+        }
+
+        updateHistoryList(); // Initialize history
+
+        // Clear history
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            localStorage.removeItem('history');
+            updateHistoryList();
+        });
+
+        // Copy output to clipboard
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            const outputText = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(outputText)
+                .then(() => alert('Text copied to clipboard!'))
+                .catch(err => alert('Failed to copy text: ' + err));
+        });
+
+        // Download output as .txt file
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const outputText = document.getElementById('output').textContent;
+            const blob = new Blob([outputText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'transcription.txt';
+            link.click();
+        });
+
+        // Clear current transcription
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            document.getElementById('output').textContent = '';
+        });
     </script>
 </body>
 </html>
