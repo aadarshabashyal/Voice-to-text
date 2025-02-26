@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice to Text</title>
+    <meta name="description" content="Convert your voice to text effortlessly with our Voice to Text tool. Supports multiple languages, including English, Spanish, French, Nepali, and Hindi. Made by Aadarsha Bashyal.">
+    <meta name="keywords" content="voice to text, speech to text, online voice converter, Aadarsha Bashyal, multilingual voice recognition, free voice to text">
+    <meta name="author" content="Aadarsha Bashyal">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yourwebsite.com" />
+    <title>Voice to Text - Convert Speech to Text Online | Aadarsha Bashyal</title>
     <style>
-       * {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -141,20 +146,97 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        .theme-toggle {
+        /* Feedback Modal */
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .feedback-modal textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .feedback-modal button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4caf50, #2196f3);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .feedback-modal button:hover {
+            background: linear-gradient(135deg, #2196f3, #4caf50);
+        }
+
+        .feedback-modal .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .feedback-modal .close-btn:hover {
+            color: #ff5555;
+        }
+
+        /* Overlay for modal */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* About Us Section */
+        .about-us {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #4caf50, #2196f3);
-            cursor: pointer;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.9rem;
+            max-width: 250px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
+        }
+
+        .about-us a {
+            color: #4caf50;
+            text-decoration: none;
+        }
+
+        .about-us a:hover {
+            text-decoration: underline;
         }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2538665028567398"
@@ -169,6 +251,7 @@
         <div id="user-info" style="display: none;">
             <p id="user-name">Hello, </p>
             <button id="google-sign-out-btn">Log Out</button>
+            <button id="give-feedback-btn">💬 Give Feedback</button>
         </div>
 
         <!-- Language selector and buttons -->
@@ -205,22 +288,42 @@
         </div>
     </div>
 
+    <!-- Feedback Modal -->
+    <div class="feedback-modal" id="feedback-modal">
+        <button class="close-btn" id="close-feedback-modal">&times;</button>
+        <h2>Give Feedback</h2>
+        <textarea id="feedback-text" placeholder="Type your feedback here..."></textarea>
+        <button id="send-feedback-btn">Send Feedback</button>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- About Us Section -->
+    <div class="about-us">
+        <p>This website is made by <strong>Aadarsha Bashyal</strong>.</p>
+        <p>Contact Email: <a href="mailto:voicetotext.ct.ws@gmail.com">voicetotext.ct.ws@gmail.com</a></p>
+        <p>Supports multiple languages and provides a seamless voice-to-text experience.</p>
+    </div>
+
     <script type="module">
         // Firebase setup
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyA1sCYnziYh22iXWIH_15xuRh7gzu0eDBs",
-            authDomain: "voicetotext-eb9d8.firebaseapp.com",
-            projectId: "voicetotext-eb9d8",
-            storageBucket: "voicetotext-eb9d8.firebasestorage.app",
-            messagingSenderId: "570361659879",
-            appId: "1:570361659879:web:f55e51c85f063d6027fd42",
-            measurementId: "G-KP56HLVNHL"
+            apiKey: "AIzaSyDIthtE87wDGT8rMoAKbF5KO0GF62bKdTU",
+            authDomain: "voicetotext-9c1ec.firebaseapp.com",
+            databaseURL: "https://voicetotext-9c1ec-default-rtdb.firebaseio.com",
+            projectId: "voicetotext-9c1ec",
+            storageBucket: "voicetotext-9c1ec.firebasestorage.app",
+            messagingSenderId: "750968257038",
+            appId: "1:750968257038:web:f9011ba06c052c25d69a5f",
+            measurementId: "G-VDVZM87Z84"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
         // Google Sign-In Logic
@@ -228,12 +331,13 @@
         const googleSignOutBtn = document.getElementById("google-sign-out-btn");
         const userInfo = document.getElementById("user-info");
         const userName = document.getElementById("user-name");
+        const giveFeedbackBtn = document.getElementById("give-feedback-btn");
 
         googleSignInBtn.addEventListener("click", () => {
             signInWithPopup(auth, provider)
                 .then((result) => {
                     const user = result.user;
-                    userName.textContent = `Hello, ${user.displayName}`; // Only display the name, not email
+                    userName.textContent = `Hello, ${user.displayName}`;
                     userInfo.style.display = "block";
                     googleSignInBtn.style.display = "none";
                 })
@@ -286,7 +390,7 @@
 
             recognition.onresult = (event) => {
                 let interim = '';
-                let newFinalTranscript = ''; // Reset final transcript each time
+                let newFinalTranscript = '';
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
@@ -336,59 +440,107 @@
             }
         });
 
-        // Save story to local storage and display in history
-        document.getElementById('save-btn').addEventListener('click', () => {
-            const currentStory = document.getElementById('output').textContent;
-            if (currentStory) {
-                let history = JSON.parse(localStorage.getItem('history')) || [];
-                history.push(currentStory);
-                localStorage.setItem('history', JSON.stringify(history));
-                updateHistoryList();
+        // Save to History
+        const saveBtn = document.getElementById('save-btn');
+        const historyList = document.getElementById('history-list');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+        saveBtn.addEventListener('click', () => {
+            const text = document.getElementById('output').textContent.trim();
+            if (text) {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.textContent = text;
+                historyList.appendChild(historyItem);
+            } else {
+                alert('No text to save!');
             }
         });
 
-        // Display saved history
-        function updateHistoryList() {
-            const historyList = JSON.parse(localStorage.getItem('history')) || [];
-            const historyContainer = document.getElementById('history-list');
-            historyContainer.innerHTML = '';
-            historyList.forEach((item, index) => {
-                const historyItem = document.createElement('div');
-                historyItem.classList.add('history-item');
-                historyItem.textContent = item;
-                historyContainer.appendChild(historyItem);
-            });
-        }
-
-        updateHistoryList(); // Initialize history
-
-        // Clear history
-        document.getElementById('clear-history-btn').addEventListener('click', () => {
-            localStorage.removeItem('history');
-            updateHistoryList();
+        clearHistoryBtn.addEventListener('click', () => {
+            historyList.innerHTML = '';
         });
 
-        // Copy output to clipboard
-        document.getElementById('copy-btn').addEventListener('click', () => {
-            const outputText = document.getElementById('output').textContent;
-            navigator.clipboard.writeText(outputText)
-                .then(() => alert('Text copied to clipboard!'))
-                .catch(err => alert('Failed to copy text: ' + err));
+        // Copy Text
+        const copyBtn = document.getElementById('copy-btn');
+        copyBtn.addEventListener('click', () => {
+            const text = document.getElementById('output').textContent.trim();
+            if (text) {
+                navigator.clipboard.writeText(text)
+                    .then(() => alert('Text copied to clipboard!'))
+                    .catch(() => alert('Failed to copy text.'));
+            } else {
+                alert('No text to copy!');
+            }
         });
 
-        // Download output as .txt file
-        document.getElementById('download-btn').addEventListener('click', () => {
-            const outputText = document.getElementById('output').textContent;
-            const blob = new Blob([outputText], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'transcription.txt';
-            link.click();
+        // Download Text
+        const downloadBtn = document.getElementById('download-btn');
+        downloadBtn.addEventListener('click', () => {
+            const text = document.getElementById('output').textContent.trim();
+            if (text) {
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'voice-to-text.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert('No text to download!');
+            }
         });
 
-        // Clear current transcription
-        document.getElementById('clear-btn').addEventListener('click', () => {
+        // Clear Text
+        const clearBtn = document.getElementById('clear-btn');
+        clearBtn.addEventListener('click', () => {
             document.getElementById('output').textContent = '';
+            finalTranscript = '';
+        });
+
+        // Feedback Modal Logic
+        const feedbackModal = document.getElementById("feedback-modal");
+        const overlay = document.getElementById("overlay");
+        const closeFeedbackModal = document.getElementById("close-feedback-modal");
+        const sendFeedbackBtn = document.getElementById("send-feedback-btn");
+        const feedbackText =
+        document.getElementById("feedback-text");
+
+        giveFeedbackBtn.addEventListener("click", () => {
+            feedbackModal.style.display = "block";
+            overlay.style.display = "block";
+        });
+
+        closeFeedbackModal.addEventListener("click", () => {
+            feedbackModal.style.display = "none";
+            overlay.style.display = "none";
+        });
+
+        sendFeedbackBtn.addEventListener("click", async () => {
+            const feedback = feedbackText.value.trim();
+            if (feedback) {
+                const user = auth.currentUser;
+                if (user) {
+                    const email = user.email;
+                    try {
+                        // Save feedback to Firestore
+                        await addDoc(collection(db, "feedback"), {
+                            email: email,
+                            message: feedback,
+                            timestamp: new Date()
+                        });
+                        alert("Feedback submitted successfully!");
+                        feedbackModal.style.display = "none";
+                        overlay.style.display = "none";
+                        feedbackText.value = ""; // Clear the textarea
+                    } catch (error) {
+                        console.error("Error submitting feedback:", error);
+                        alert("Failed to submit feedback. Please try again.");
+                    }
+                }
+            } else {
+                alert("Please enter your feedback before sending.");
+            }
         });
     </script>
 </body>
